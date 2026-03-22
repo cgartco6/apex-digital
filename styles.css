@@ -1,0 +1,13 @@
+* { font-family: 'Inter', sans-serif; }
+body { background: #0b0f1c; overflow-x: hidden; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1e2538; }
+::-webkit-scrollbar-thumb { background: #f97316; border-radius: 10px; }
+.glass-card { background: rgba(18, 24, 38, 0.85); backdrop-filter: blur(2px); border: 1px solid rgba(249, 115, 22, 0.25); }
+.btn-primary { background: linear-gradient(95deg, #f97316, #dc2626); transition: transform 0.1s ease; }
+.btn-primary:active { transform: scale(0.97); }
+.tab-active { border-bottom: 3px solid #f97316; color: white; background: rgba(249,115,22,0.15); }
+.pro-badge { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 0 8px gold; }
+.landing-page-preview { background: white; color: #111; border-radius: 1rem; overflow: hidden; }
+.layer-item:hover { background: rgba(249,115,22,0.2); }
+.modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
