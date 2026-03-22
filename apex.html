@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Digital Pro | Professional Marketing Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        /* Professional gradient background with masked photo overlay */
+        body {
+            background: linear-gradient(135deg, #0a1928 0%, #0c2a3e 50%, #0f2c3c 100%);
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* Masked photo effect - abstract business pattern overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Modern glassmorphic cards with navy/blue tones */
+        .glass-card {
+            background: linear-gradient(135deg, rgba(25, 45, 65, 0.85) 0%, rgba(20, 40, 60, 0.9) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Professional button gradients */
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #0f2c3c, #1e3a5f);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #1e3a5f, #2c4a6e);
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+        
+        /* Tab styling - modern with blue accents */
+        .tab-active {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(59, 130, 246, 0.1));
+            border-bottom: 3px solid #3b82f6;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .tab-inactive {
+            color: #9ca3af;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-inactive:hover {
+            color: #e5e7eb;
+            border-bottom-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Pro badge with blue/purple gradient */
+        .pro-badge {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Layer items */
+        .layer-item {
+            transition: all 0.15s ease;
+        }
+        
+        .layer-item:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateX(4px);
+        }
+        
+        /* Modal overlay */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+        }
+        
+        /* Custom scrollbar with blue theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e2a3a;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #60a5fa;
+        }
+        
+        /* Input fields styling */
+        input, select, textarea {
+            transition: all 0.2s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            ring: 2px solid #3b82f6;
+            border-color: #3b82f6;
+        }
+        
+        /* Dashboard cards */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(25, 45, 65, 0.7), rgba(20, 40, 60, 0.8));
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        /* Headers */
+        h1, h2, h3, h4 {
+            letter-spacing: -0.02em;
+        }
+        
+        /* Canvas wrapper */
+        .canvas-wrapper {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border-radius: 1rem;
+            padding: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <div id="root"></div>
+    <script>
+        // ============================================
+        //   FULL APEX DIGITAL APP – PROFESSIONAL VERSION
+        // ============================================
+        const { useState, useEffect, useRef } = React;
+        const h = React.createElement;
+        const Fragment = React.Fragment;
+
+        // Utilities
+        const getStorageKey = (role, key) => `${role}_${key}`;
+        const saveToLocal = (role, key, data) => localStorage.setItem(getStorageKey(role, key), JSON.stringify(data));
+        const loadFromLocal = (role, key, defaultValue) => {
+            const raw = localStorage.getItem(getStorageKey(role, key));
+            return raw ? JSON.parse(raw) : defaultValue;
+        };
+
+        // Constants
+        const BANK_DETAILS = {
+            bank: "FNB (First National Bank)",
+            accountName: "Apex Digital (Pty) Ltd",
+            accountNumber: "62849612345",
+            branchCode: "250655",
+            referencePrefix: "APX"
+        };
+        const DEFAULT_AD = {
+            headline: "Create Scroll-Stopping Social Ads in Minutes",
+            copy: "Apex Social Media Ad Creator helps you design high‑conversion ads with AI‑assisted copy and instant previews. No design skills needed.",
+            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
+            cta: "Try for Free"
+        };
+
+        // ---------- DESIGN STUDIO ----------
+        const DesignStudio = ({ role }) => {
+            const canvasRef = useRef(null);
+            const fabricCanvas = useRef(null);
+            const [layers, setLayers] = useState([]);
+            const [selectedId, setSelectedId] = useState(null);
+
+            const updateLayers = () => {
+                if (!fabricCanvas.current) return;
+                const objects = fabricCanvas.current.getObjects();
+                setLayers(objects.map((obj, i) => ({ id: i, type: obj.type, text: obj.text || '' })));
+            };
+
+            useEffect(() => {
+                if (!canvasRef.current) return;
+                const canvas = new fabric.Canvas(canvasRef.current, {
+                    width: 580,
+                    height: 360,
+                    backgroundColor: '#f8fafc',
+                });
+                fabricCanvas.current = canvas;
+                const saved = loadFromLocal(role, 'design_state', null);
+                if (saved) canvas.loadFromJSON(saved, () => canvas.renderAll());
+                else {
+                    const defaultText = new fabric.IText('APEX\nDESIGN', { left: 100, top: 120, fontSize: 36, fill: '#1e3a8a', fontFamily: 'Inter', fontWeight: 'bold' });
+                    canvas.add(defaultText);
+                    canvas.renderAll();
+                }
+                canvas.on('object:added', updateLayers);
+                canvas.on('object:removed', updateLayers);
+                canvas.on('selection:created', updateLayers);
+                canvas.on('selection:cleared', () => setSelectedId(null));
+                updateLayers();
+                return () => canvas.dispose();
+            }, [role]);
+
+            const addText = () => {
+                const text = new fabric.IText('Edit me', { left: 50, top: 50, fontSize: 24, fill: '#1f2937', fontFamily: 'Inter' });
+                fabricCanvas.current.add(text);
+                fabricCanvas.current.renderAll();
+            };
+            const addRect = () => {
+                const rect = new fabric.Rect({ width: 80, height: 80, fill: '#3b82f6', left: 200, top: 200, stroke: 'white', strokeWidth: 2 });
+                fabricCanvas.current.add(rect);
+                fabricCanvas.current.renderAll();
+            };
+            const uploadImage = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    fabric.Image.fromURL(ev.target.result, (img) => {
+                        img.scaleToWidth(150);
+                        fabricCanvas.current.add(img);
+                        fabricCanvas.current.renderAll();
+                    });
+                };
+                reader.readAsDataURL(file);
+            };
+            const styleSelected = (prop, val) => {
+                const active = fabricCanvas.current.getActiveObject();
+                if (active) {
+                    active.set(prop, val);
+                    fabricCanvas.current.renderAll();
+                }
+            };
+            const exportPNG = () => {
+                const dataURL = fabricCanvas.current.toDataURL('png');
+                const link = document.createElement('a');
+                link.download = 'apex-design.png';
+                link.href = dataURL;
+                link.click();
+            };
+            const saveDesign = () => {
+                const json = JSON.stringify(fabricCanvas.current.toJSON());
+                saveToLocal(role, 'design_state', json);
+                alert('Design saved to browser!');
+            };
+
+            return h('div', { className: 'space-y-4' },
+                h('div', { className: 'flex flex-wrap gap-2' },
+                    h('button', { onClick: addText, className: 'btn-primary px-4 py-2 rounded-lg text-sm font-medium text-white' }, h('i', { className: 'fas fa-font mr-2' }), 'Text'),
+                    h('button', { onClick: addRect, className: 'btn-primary px-4 py-2 rounded-lg text-sm font-medium text-white' }, h('i', { className: 'fas fa-square mr-2' }), 'Shape'),
+                    h('label', { className: 'btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer' }, h('i', { className: 'fas fa-image mr-2' }), 'Image',
+                        h('input', { type: 'file', accept: 'image/*', className: 'hidden', onChange: uploadImage })),
+                    h('div', { className: 'flex gap-1 bg-gray-700/30 rounded-lg p-1' },
+                        h('button', { onClick: () => styleSelected('fontWeight', 'bold'), className: 'bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-white transition' }, h('b', null, 'B')),
+                        h('button', { onClick: () => styleSelected('fontStyle', 'italic'), className: 'bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-white transition' }, h('i', null, 'I')),
+                        h('input', { type: 'color', onChange: (e) => styleSelected('fill', e.target.value), className: 'w-8 h-8 rounded cursor-pointer' })),
+                    h('button', { onClick: exportPNG, className: 'bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-medium text-white transition' }, h('i', { className: 'fas fa-download mr-2' }), 'PNG'),
+                    h('button', { onClick: saveDesign, className: 'bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium text-white transition' }, h('i', { className: 'fas fa-save mr-2' }), 'Save')
+                ),
+                h('div', { className: 'flex justify-center canvas-wrapper' }, h('canvas', { ref: canvasRef, className: 'rounded-xl shadow-2xl', style: { maxWidth: '100%', height: 'auto' } })),
+                h('div', { className: 'glass-card p-3 rounded-xl' },
+                    h('h4', { className: 'text-sm font-bold mb-2 flex items-center gap-2 text-blue-300' }, h('i', { className: 'fas fa-layer-group' }), 'Layers'),
+                    h('div', { className: 'max-h-32 overflow-y-auto space-y-1' }, layers.map((l, idx) =>
+                        h('div', { key: idx, className: `layer-item flex justify-between items-center p-2 text-xs rounded cursor-pointer ${selectedId === idx ? 'bg-blue-600/30' : 'hover:bg-blue-500/20'}`,
+                            onClick: () => { fabricCanvas.current.setActiveObject(fabricCanvas.current.getObjects()[idx]); fabricCanvas.current.renderAll(); setSelectedId(idx); } },
+                            h('span', null, h('i', { className: `fas fa-${l.type === 'text' ? 'font' : 'square'} mr-2 text-blue-400` }), l.text || l.type),
+                            h('i', { className: 'fas fa-eye text-gray-400' })
+                        )
+                    ))
+                )
+            );
+        };
+
+        // ---------- BRANDING STUDIO ----------
+        const BrandingStudio = ({ role }) => {
+            const [primary, setPrimary] = useState(loadFromLocal(role, 'brand_primary', '#1e3a8a'));
+            const [secondary, setSecondary] = useState(loadFromLocal(role, 'brand_secondary', '#3b82f6'));
+            const [font, setFont] = useState(loadFromLocal(role, 'brand_font', 'Inter'));
+            const [logo, setLogo] = useState(loadFromLocal(role, 'brand_logo', 'https://placehold.co/200x80/1e3a8a/ffffff?text=APEX'));
+            const [tempLogo, setTempLogo] = useState('');
+
+            useEffect(() => {
+                saveToLocal(role, 'brand_primary', primary);
+                saveToLocal(role, 'brand_secondary', secondary);
+                saveToLocal(role, 'brand_font', font);
+                saveToLocal(role, 'brand_logo', logo);
+            }, [primary, secondary, font, logo, role]);
+
+            const exportZip = async () => {
+                const zip = new JSZip();
+                zip.file("brand.css", `:root{--primary:${primary};--secondary:${secondary};--font:${font}}`);
+                if (logo && logo.startsWith('http')) {
+                    try {
+                        const res = await fetch(logo);
+                        const blob = await res.blob();
+                        zip.file("logo.png", blob);
+                    } catch(e) {}
+                }
+                const content = await zip.generateAsync({ type: "blob" });
+                saveAs(content, "apex-brand-kit.zip");
+            };
+
+            return h('div', { className: 'grid md:grid-cols-2 gap-6' },
+                h('div', { className: 'space-y-4' },
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Primary Color'),
+                        h('input', { type: 'color', value: primary, onChange: e => setPrimary(e.target.value), className: 'w-full h-12 rounded-lg cursor-pointer bg-gray-800 border border-gray-600' })),
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Secondary Color'),
+                        h('input', { type: 'color', value: secondary, onChange: e => setSecondary(e.target.value), className: 'w-full h-12 rounded-lg cursor-pointer bg-gray-800 border border-gray-600' })),
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Brand Font'),
+                        h('select', { value: font, onChange: e => setFont(e.target.value), className: 'bg-gray-800 p-3 rounded-lg w-full border border-gray-600' },
+                            h('option', { value: 'Inter' }, 'Inter'), h('option', { value: 'Poppins' }, 'Poppins'), h('option', { value: 'Montserrat' }, 'Montserrat'))),
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Logo URL'),
+                        h('div', { className: 'flex gap-2' }, h('input', { value: tempLogo, onChange: e => setTempLogo(e.target.value), className: 'bg-gray-800 flex-1 p-3 rounded-lg border border-gray-600', placeholder: 'https://...' }),
+                            h('button', { onClick: () => tempLogo && setLogo(tempLogo), className: 'btn-primary px-6 rounded-lg text-white font-medium' }, 'Set'))),
+                    h('button', { onClick: exportZip, className: 'btn-primary w-full py-3 rounded-lg font-medium text-white mt-4' }, h('i', { className: 'fas fa-file-zipper mr-2' }), 'Download Brand Kit (ZIP)')
+                ),
+                h('div', { className: 'glass-card p-6 rounded-2xl', style: { backgroundColor: secondary+'20', borderTop: `4px solid ${primary}`, fontFamily: font } },
+                    h('h3', { style: { color: primary }, className: 'text-2xl font-bold' }, 'APEX Brand Preview'),
+                    h('div', { className: 'flex gap-3 mt-4' },
+                        h('span', { className: 'px-4 py-2 rounded-full text-white text-sm font-medium', style: { background: primary } }, 'Primary'),
+                        h('span', { className: 'px-4 py-2 rounded-full text-white text-sm font-medium', style: { background: secondary } }, 'Secondary')
+                    ),
+                    h('img', { src: logo, className: 'max-h-20 mt-4 object-contain', alt: 'logo' }),
+                    h('p', { className: 'text-sm text-gray-300 mt-4' }, 'Your brand identity is consistent across all marketing materials.')
+                )
+            );
+        };
+
+        // ---------- MARKETING STUDIO ----------
+        const MarketingStudio = ({ role, aggressiveBoostFlag, onBoostAcknowledge }) => {
+            const [campaigns, setCampaigns] = useState(loadFromLocal(role, 'campaigns', [
+                { id:1, name:"Summer Blast", budget:2500, impressions:45800, clicks:3100, conversions:342 },
+                { id:2, name:"Flash Sale", budget:1200, impressions:23400, clicks:2100, conversions:198 }
+            ]));
+            const [newCampaign, setNewCampaign] = useState({ name: "", budget: "" });
+
+            useEffect(() => {
+                saveToLocal(role, 'campaigns', campaigns);
+            }, [campaigns, role]);
+
+            useEffect(() => {
+                if (aggressiveBoostFlag) {
+                    setCampaigns(prev => prev.map(c => ({
+                        ...c,
+                        impressions: Math.floor(c.impressions * 1.4),
+                        clicks: Math.floor(c.clicks * 1.5),
+                        conversions: Math.floor(c.conversions * 1.35)
+                    })));
+                    if (onBoostAcknowledge) onBoostAcknowledge();
+                }
+            }, [aggressiveBoostFlag]);
+
+            const addCampaign = () => {
+                if (!newCampaign.name || !newCampaign.budget) return;
+                setCampaigns([...c
