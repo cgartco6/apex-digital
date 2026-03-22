@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Digital - Working Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f5f5f5;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .header h1 {
+            color: #1e3a8a;
+            font-size: 2rem;
+        }
+        .header p {
+            color: #4b5563;
+            margin-top: 8px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #1e3a8a;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+        }
+        .card h3 {
+            color: #374151;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+        button {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background: #6b7280;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-card i {
+            font-size: 2rem;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .stat-card .label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1e3a8a;
+            ring: 2px solid #1e3a8a;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .tab.active {
+            background: #1e3a8a;
+            color: white;
+        }
+        .campaign-item {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+        }
+        .campaign-item:hover {
+            background: #f3f4f6;
+        }
+        .pro-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .error-box {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px;
+            border: 1px solid #fecaca;
+        }
+        .success-box {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .role-selector {
+            display: inline-block;
+            margin-left: 20px;
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        .layer-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 12px;
+        }
+        .layer-item {
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+        .layer-item:hover {
+            background: #f3f4f6;
+        }
+        .layer-item.selected {
+            background: #dbeafe;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        // ============================================
+        //   COMPLETE WORKING VERSION - NO DEPENDENCIES
+        //   Uses only what's loaded below
+        // ============================================
+        
+        // First, show a loading message
+        document.getElementById('root').innerHTML = '<div style="text-align:center;padding:50px;">Loading Apex Digital...<br>Please wait</div>';
+        
+        // Load React dynamically
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Load all required scripts in order
+        Promise.all([
+            loadScript('https://unpkg.com/react@18.2.0/umd/react.development.js'),
+            loadScript('https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js'),
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js')
+        ]).then(() => {
+            // Now render the app
+            startApp();
+        }).catch((err) => {
+            document.getElementById('root').innerHTML = `
+                <div style="background:#fee2e2;color:#dc2626;padding:20px;margin:20px;border-radius:8px;">
+                    <h3>Failed to load required libraries</h3>
+                    <p>Error: ${err.message}</p>
+                    <p>Please check your internet connection and try again.</p>
+                </div>
+            `;
+        });
+        
+        function startApp() {
+            const { useState, useEffect, useRef, createElement: h, Fragment } = React;
+            
+            // Utilities
+            const getStorageKey = (role, key) => `${role}_${key}`;
+            const saveToLocal = (role, key, data) => localStorage.setItem(getStorageKey(role, key), JSON.stringify(data));
+            const loadFromLocal = (role, key, defaultValue) => {
+                const raw = localStorage.getItem(getStorageKey(role, key));
+                return raw ? JSON.parse(raw) : defaultValue;
+            };
+            
+            // Constants
+            const BANK_DETAILS = {
+                bank: "FNB (First National Bank)",
+                accountName: "Apex Digital (Pty) Ltd",
+                accountNumber: "62849612345",
+                branchCode: "250655",
+                referencePrefix: "APX"
+            };
+            
+            // ---------- DESIGN STUDIO ----------
+            const DesignStudio = ({ role }) => {
+                const canvasRef = useRef(null);
+                const [layers, setLayers] = useState([]);
+                const [selectedId, setSelectedId] = useState(null);
+                
+                useEffect(() => {
+                    if (!canvasRef.current || !window.fabric) return;
+                    const canvas = new window.fabric.Canvas(canvasRef.current, {
+                        width: 600,
+                        height: 400,
+                        backgroundColor: '#ffffff',
+                    });
+                    
+                    const saved = loadFromLocal(role, 'design_state', null);
+                    if (saved) {
+                        canvas.loadFromJSON(saved, () => canvas.renderAll());
+                    } else {
+                        const defaultText = new window.fabric.IText('APEX DESIGN', {
+                            left: 200,
+                            top: 180,
+                            fontSize: 32,
+                            fill: '#1e3a8a',
+                            fontFamily: 'Arial'
+                        });
+                        canvas.add(defaultText);
+                        canvas.renderAll();
+                    }
+                    
+                    const updateLayers = () => {
+                        const objects = canvas.getObjects();
+                        setLayers(objects.map((obj, i) => ({ id: i, type: obj.type, text: obj.text || '' })));
+                    };
+                    
+                    canvas.on('object:added', updateLayers);
+                    canvas.on('object:removed', updateLayers);
+                    canvas.on('selection:cleared', () => setSelectedId(null));
+                    updateLayers();
+                    
+                    window.currentCanvas = canvas;
+                    
+                    return () => canvas.dispose();
+                }, [role]);
+                
+                const addText = () => {
+                    if (!window.currentCanvas) return;
+                    const text = new window.fabric.IText('Edit me', { left: 50, top: 50, fontSize: 20, fill: '#000' });
+                    window.currentCanvas.add(text);
+                    window.currentCanvas.renderAll();
+                };
+                
+                const addRect = () => {
+                    if (!window.currentCanvas) return;
+                    const rect = new window.fabric.Rect({ width: 80, height: 80, fill: '#1e3a8a', left: 200, top: 200 });
+                    window.currentCanvas.add(rect);
+                    window.currentCanvas.renderAll();
+                };
+                
+                const exportPNG = () => {
+                    if (!window.currentCanvas) return;
+                    const dataURL = window.currentCanvas.toDataURL('png');
+                    const link = document.createElement('a');
+                    link.download = 'apex-design.png';
+                    link.href = dataURL;
+                    link.click();
+                };
+                
+                const saveDesign = () => {
+                    if (!window.currentCanvas) return;
+                    const json = JSON.stringify(window.currentCanvas.toJSON());
+                    saveToLocal(role, 'design_state', json);
+                    alert('Design saved!');
+                };
+                
+                const selectLayer = (idx) => {
+                    if (!window.currentCanvas) return;
+                    const obj = window.currentCanvas.getObjects()[idx];
+                    if (obj) {
+                        window.currentCanvas.setActiveObject(obj);
+                        window.currentCanvas.renderAll();
+                        setSelectedId(idx);
+                    }
+                };
+                
+                return h('div', { className: 'card' },
+                    h('h2', null, '🎨 Design Studio'),
+                    h('div', null,
+                        h('button', { onClick: addText }, '➕ Add Text'),
+                        h('button', { onClick: addRect }, '⬛ Add Shape'),
+                        h('button', { onClick: exportPNG }, '📸 Export PNG'),
+                        h('button', { onClick: saveDesign }, '💾 Save Design')
+                    ),
+                    h('div', { style: { marginTop: '16px', textAlign: 'center' } },
+                        h('canvas', { ref: canvasRef, style: { border: '1px solid #ccc', borderRadius: '8px', maxWidth: '100%', height: 'auto' } })
+                    ),
+                    h('div', { className: 'layer-list' },
+                        h('strong', null, 'Layers:'),
+                        layers.map((layer, idx) => 
+                            h('div', { key: idx, className: `layer-item ${selectedId === idx ? 'selected' : ''}`, onClick: () => selectLayer(idx) },
+                                `📄 ${layer.text || layer.type}`
+                            )
+                        )
+                    )
+                );
+            };
+            
+            // ---------- BRANDING STUDIO ----------
+            const BrandingStudio = ({ role }) => {
+                const [primary, setPrimary] = useState(loadFromLocal(role, 'brand_primary', '#1e3a8a'));
+                const [secondary, setSecondary] = useState(loadFromLocal(role, 'brand_secondary', '#3b82f6'));
+                const [logo, setLogo] = useState(loadFromLocal(role, 'brand_logo', ''));
+                const [tempLogo, setTempLogo] = useState('');
+                
+                useEffect(() => {
+                    saveToLocal(role, 'brand_primary', primary);
+                    saveToLocal(role, 'brand_secondary', secondary);
+                    saveToLocal(role, 'brand_logo', logo);
+                }, [primary, secondary, logo, role]);
+                
+                return h('div', { className: 'card' },
+                    h('h2', null, '🎨 Branding Studio'),
+                    h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' } },
+                        h('div', null,
+                            h('label', null, 'Primary Color:'),
+                            h('input', { type: 'color', value: primary, onChange: e => setPrimary(e.target.value) }),
+                            h('label', null, 'Secondary Color:'),
+                            h('input', { type: 'color', value: secondary, onChange: e => setSecondary(e.target.value) }),
+                            h('label', null, 'Logo URL:'),
+                            h('div', { style: { display: 'flex', gap: '8px' } },
+                                h('input', { value: tempLogo, onChange: e => setTempLogo(e.target.value), placeholder: 'https://...' }),
+                                h('button', { onClick: () => tempLogo && setLogo(tempLogo) }, 'Set')
+                            )
+                        ),
+                        h('div', { style: { background: secondary, padding: '20px', borderRadius: '8px', textAlign: 'center', color: 'white' } },
+                            h('h3', { style: { color: primary } }, 'Brand Preview'),
+                            h('div', { style: { background: primary, padding: '10px', borderRadius: '8px', marginTop: '10px' } }, 'Primary Button'),
+                            h('div', { style: { background: secondary, padding: '10px', borderRadius: '8px', marginTop: '10px', border: '1px solid white' } }, 'Secondary Button'),
+                            logo && h('img', { src: logo, style: { maxHeight: '60px', marginTop: '10px' }, alt: 'logo' })
+                        )
+                    )
+                );
+            };
+            
+            // ---------- MARKETING STUDIO ----------
+            const MarketingStudio = ({ role }) => {
+                const [campaigns, setCampaigns] = useState(loadFromLocal(role, 'campaigns', [
+                    { id: 1, name: "Summer Campaign", budget: 2500, impressions: 45000, clicks: 3200, conversions: 280 },
+                    { id: 2, name: "Winter Sale", budget: 1800, impressions: 28000, clicks: 2100, conversions: 165 }
+                ]));
+                const [newName, setNewName] = useState('');
+                const [newBudget, setNewBudget] = useState('');
+                
+                useEffect(() => {
+                    saveToLocal(role, 'campaigns', campaigns);
+                }, [campaigns, role]);
+                
+                const addCampaign = () => {
+                    if (!newName || !newBudget) return;
+                    setCampaigns([...campaigns, {
+                        id: Date.now(),
+                        name: newName,
+                        budget: parseInt(newBudget),
+                        impressions: Math.floor(Math.random() * 30000) + 10000,
+                        clicks: Math.floor(Math.random() * 3000) + 500,
+                        conversions: Math.floor(Math.random() * 200) + 20
+                    }]);
+                    setNewName('');
+                    setNewBudget('');
+                };
+                
+                const totals = campaigns.reduce((acc, c) => ({
+                    impressions: acc.impressions + c.impressions,
+                    clicks: acc.clicks + c.clicks,
+                    conversions: acc.conversions + c.conversions,
+                    budget: acc.budget + c.budget
+                }), { impressions: 0, clicks: 0, conversions: 0, budget: 0 });
+                
+                return h('div', { className: 'card' },
+                    h('h2', null, '📊 Marketing Studio'),
+                    h('div', { className: 'stats-grid' },
+                        h('div', { className: 'stat-card' }, h('i', null, '👁️'), h('div', { className: 'number' }, totals.impressions.toLocaleString()), h('div', { className: 'label' }, 'Total Impressions')),
+                        h('div', { className: 'stat-card' }, h('i', null, '🖱️'), h('div', { className: 'number' }, totals.clicks.toLocaleString()), h('div', { className: 'label' }, 'Total Clicks')),
+                        h('div', { className: 'stat-card' }, h('i', null, '✅'), h('div', { className: 'number' }, totals.conversions), h('div', { className: 'label' }, 'Conversions')),
+                        h('div', { className: 'stat-card' }, h('i', null, '📈'), h('div', { className: 'number' }, ((totals.conversions * 50) / totals.budget || 0).toFixed(1) + '%'), h('div', { className: 'label' }, 'ROI Est.'))
+                    ),
+                    h('h3', null, 'Your Campaigns'),
+                    campaigns.map(c => 
+                        h('div', { key: c.id, className: 'campaign-item' },
+                            h('span', null, h('strong', null, c.name), ` ($${c.budget})`),
+                            h('span', null, `${c.impressions.toLocaleString()} views | ${c.clicks} clicks | ${c.conversions} conv`)
+                        )
+                    ),
+                    h('h3', null, 'Create New Campaign'),
+                    h('input', { placeholder: 'Campaign Name', value: newName, onChange: e => setNewName(e.target.value) }),
+                    h('input', { placeholder: 'Budget ($)', type: 'number', value: newBudget, onChange: e => setNewBudget(e.target.value) }),
+                    h('button', { onClick: addCampaign }, '🚀 Launch Campaign')
+                );
+            };
+            
+            // ---------- PAYMENT SYSTEM ----------
+            const PaymentSystem = ({ role, onPaymentVerified }) => {
+                const [requests, setRequests] = useState(loadFromLocal(role, 'payment_requests', []));
+                const [amount, setAmount] = useState('');
+                const [isPro, setIsPro] = useState(() => loadFromLocal(role, 'pro_status', false));
+                
+                const createRequest = () => {
+                    if (!amount || parseFloat(amount) <= 0) return alert('Please enter a valid amount');
+                    const ref = `APX-${Math.floor(Math.random() * 100000)}`;
+                    const newReq = {
+                        id: Date.now(),
+                        amount: parseFloat(amount),
+                        reference: ref,
+                        status: 'pending',
+                        date: new Date().toLocaleString()
+                    };
+                    setRequests([newReq, ...requests]);
+                    saveToLocal(role, 'payment_requests', [newReq, ...requests]);
+                    setAmount('');
+                    alert(`Payment request created!\nReference: ${ref}\n\nEFT Details:\n${BANK_DETAILS.bank}\n${BANK_DETAILS.accountName}\nAccount: ${BANK_DETAILS.accountNumber}\nBranch: ${BANK_DETAILS.branchCode}\nAmount: ZAR ${amount}`);
+                };
+                
+                const verifyPayment = (id) => {
+                    const updated = requests.map(r => r.id === id ? { ...r, status: 'verified' } : r);
+                    setRequests(updated);
+                    saveToLocal(role, 'payment_requests', updated);
+                    if (updated.some(r => r.status === 'verified')) {
+                        setIsPro(true);
+                        saveToLocal(role, 'pro_status', true);
+                        if (onPaymentVerified) onPaymentVerified();
+                        alert('✅ Pro status unlocked!');
+                    }
+                };
+                
+                return h('div', { className: 'card' },
+                    h('h2', null, '💰 Payment System'),
+                    isPro && h('div', { className: 'success-box' }, '🎉 PRO ACTIVE - Thank you for your support!'),
+                    h('div', { style: { background: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '16px' } },
+                        h('strong', null, 'Bank Details:'),
+                        h('p', null, `Bank: ${BANK_DETAILS.bank}`),
+                        h('p', null, `Account: ${BANK_DETAILS.accountName}`),
+                        h('p', null, `Number: ${BANK_DETAILS.accountNumber}`),
+                        h('p', null, `Branch: ${BANK_DETAILS.branchCode}`)
+                    ),
+                    h('h3', null, 'Make a Payment'),
+                    h('input', { type: 'number', placeholder: 'Amount (ZAR)', value: amount, onChange: e => setAmount(e.target.value) }),
+                    h('button', { onClick: createRequest }, '💳 Create Payment Request'),
+                    h('h3', null, 'Payment History'),
+                    requests.length === 0 ? h('p', null, 'No payment requests yet') :
+                        requests.map(r => 
+                            h('div', { key: r.id, className: 'campaign-item' },
+                                h('span', null, `Ref: ${r.reference} - ZAR ${r.amount}`),
+                                h('span', null, r.date),
+                                r.status === 'pending' ? 
+                                    h('button', { className: 'btn-success', onClick: () => verifyPayment(r.id) }, 'Verify (Admin)') :
+                                    h('span', { style: { color: '#10b981' } }, '✓ Verified')
+                            )
+                        )
+                );
+            };
+            
+            // ---------- DASHBOARD ----------
+            const Dashboard = ({ role }) => {
+                const campaigns = loadFromLocal(role, 'campaigns', []);
+                const designSaved = loadFromLocal(role, 'design_state', null);
+                const pro = loadFromLocal(role, 'pro_status', false);
+                
+                if (role === 'client') {
+                    return h('div', { className: 'card' },
+                        h('h2', null, '📊 Client Dashboard'),
+                        h('div', { className: 'stats-grid' },
+                            h('div', { className: 'stat-card' }, h('i', null, '📢'), h('div', { className: 'number' }, campaigns.length), h('div', { className: 'label' }, 'Active Campaigns')),
+                            h('div', { className: 'stat-card' }, h('i', null, '🎨'), h('div', { className: 'number' }, designSaved ? 'Yes' : 'No'), h('div', { className: 'label' }, 'Design Saved')),
+                            h('div', { className: 'stat-card' }, h('i', null, '⭐'), h('div', { className: 'number' }, pro ? 'Active' : 'Inactive'), h('div', { className: 'label' }, 'Pro Status'))
+                        ),
+                        h('div', { style: { marginTop: '16px' } },
+                            h('strong', null, 'Recent Activity'),
+                            h('ul', { style: { marginTop: '8px', listStyle: 'none' } },
+                                h('li', null, `📅 Last login: ${new Date().toLocaleString()}`),
+                                h('li', null, `📊 Total campaigns: ${campaigns.length}`),
+                                h('li', null, `🎨 Design status: ${designSaved ? 'Saved' : 'Not saved'}`)
+                            )
+                        )
+                    );
+                } else if (role === 'admin') {
+                    return h('div', { className: 'card' },
+                        h('h2', null, '🛡️ Admin Dashboard'),
+                        h('div', { className: 'stats-grid' },
+                            h('div', { className: 'stat-card' }, h('i', null, '👥'), h('div', { className: 'number' }, '2'), h('div', { className: 'label' }, 'Active Clients')),
+                            h('div', { className: 'stat-card' }, h('i', null, '📢'), h('div', { className: 'number' }, campaigns.length), h('div', { className: 'label' }, 'Total Campaigns')),
+                            h('div', { className: 'stat-card' }, h('i', null, '⭐'), h('div', { className: 'number' }, pro ? '1' : '0'), h('div', { className: 'label' }, 'Pro Clients'))
+                        ),
+                        h('p', null, 'Use the Payments tab to verify client payment requests.')
+                    );
+                } else {
+                    return h('div', { className: 'card' },
+                        h('h2', null, '👑 Owner Dashboard'),
+                        h('div', { className: 'stats-grid' },
+                            h('div', { className: 'stat-card' }, h('i', null, '🎯'), h('div', { className: 'number' }, '3,000'), h('div', { className: 'label' }, 'Target Audience')),
+                            h('div', { className: 'stat-card' }, h('i', null, '⏱️'), h('div', { className: 'number' }, '3 Days'), h('div', { className: 'label' }, 'Campaign Duration')),
+                            h('div', { className: 'stat-card' }, h('i', null, '✅'), h('div', { className: 'number' }, 'Honest'), h('div', { className: 'label' }, 'Marketing Policy'))
+                        ),
+                        h('div', { style: { marginTop: '16px', background: '#f9fafb', padding: '16px', borderRadius: '8px' } },
+                            h('strong', null, 'Platform Marketing Engine'),
+                            h('p', null, 'Target: 3,000 impulse buyers in 3 days'),
+                            h('p', { style: { fontSize: '12px', color: '#6b7280' } }, '• No upsells • No false claims • Honest advertising'),
+                            h('button', { className: 'btn-success' }, '🚀 Start Campaign (Simulated)')
+                        )
+                    );
+                }
+            };
+            
+            // ---------- MAIN APP ----------
+            const App = () => {
+                const [role, setRole] = useState('client');
+                const [activeTab, setActiveTab] = useState('dashboard');
+                const [proStatus, setProStatus] = useState(() => loadFromLocal(role, 'pro_status', false));
+                
+                const resetData = () => {
+                    if (confirm('Reset all data for this role?')) {
+                        const keys = Object.keys(localStorage);
+                        keys.forEach(k => {
+                            if (k.startsWith(role)) localStorage.removeItem(k);
+                        });
+                        window.location.reload();
+                    }
+                };
+                
+                const onPaymentVerified = () => setProStatus(true);
+                
+                const tabs = [
+                    { id: 'dashboard', name: 'Dashboard', icon: '📊' },
+                    { id: 'design', name: 'Design', icon: '🎨' },
+                    { id: 'branding', name: 'Branding', icon: '🏷️' },
+                    { id: 'marketing', name: 'Marketing', icon: '📈' },
+                    { id: 'payments', name: 'Payments', icon: '💰' }
+                ];
+                
+                return h('div', { className: 'app-container' },
+                    h('div', { className: 'header' },
+                        h('div', { className: 'header-controls' },
+                            h('div', null,
+                                h('h1', null, 'APEX DIGITAL'),
+                                h('p', null, 'Design · Brand · Marketing · Payments')
+                            ),
+                            h('div', null,
+                                h('select', { value: role, onChange: e => setRole(e.target.value), className: 'role-selector' },
+                                    h('option', { value: 'client' }, '👤 Client'),
+                                    h('option', { value: 'admin' }, '🛡️ Admin'),
+                                    h('option', { value: 'owner' }, '👑 Owner')
+                                ),
+                                proStatus && h('span', { className: 'pro-badge', style: { marginLeft: '10px' } }, '⭐ PRO'),
+                                h('button', { onClick: resetData, className: 'btn-secondary', style: { marginLeft: '10px' } }, 'Reset Data')
+                            )
+                        )
+                    ),
+                    h('div', { className: 'tabs' },
+                        tabs.map(tab => 
+                            h('button', { 
+                                key: tab.id, 
+                                onClick: () => setActiveTab(tab.id),
+                                className: `tab ${activeTab === tab.id ? 'active' : ''}`
+                            }, `${tab.icon} ${tab.name}`)
+                        )
+                    ),
+                    activeTab === 'dashboard' && h(Dashboard, { role }),
+                    activeTab === 'design' && h(DesignStudio, { role }),
+                    activeTab === 'branding' && h(BrandingStudio, { role }),
+                    activeTab === 'marketing' && h(MarketingStudio, { role }),
+                    activeTab === 'payments' && h(PaymentSystem, { role, onPaymentVerified })
+                );
+            };
+            
+            // Render the app
+            const rootElement = document.getElementById('root');
+            ReactDOM.createRoot(rootElement).render(h(App));
+        }
+    </script>
+</body>
+</html>
