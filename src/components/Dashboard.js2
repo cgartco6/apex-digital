@@ -1,0 +1,65 @@
+import React from 'react';
+import { loadFromLocal } from '../utils/storage';
+import PlatformMarketingEngine from './PlatformMarketingEngine';
+
+const Dashboard = ({ role }) => {
+    if (role === 'client') {
+        const campaigns = loadFromLocal(role, 'campaigns', []);
+        const designSaved = loadFromLocal(role, 'design_state', null);
+        const proStatus = loadFromLocal(role, 'pro_status', false);
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold">Client Dashboard</h2>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-chart-line text-orange-400"></i><p className="text-2xl font-bold">{campaigns.length}</p><p>Active Campaigns</p></div>
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-palette text-blue-400"></i><p className="text-2xl font-bold">{designSaved ? "Yes" : "No"}</p><p>Design Saved</p></div>
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-crown text-yellow-400"></i><p className="text-2xl font-bold">{proStatus ? "Active" : "Inactive"}</p><p>Pro Status</p></div>
+                </div>
+                <div className="glass-card p-4 rounded-xl">
+                    <h4 className="font-bold">Recent Activity</h4>
+                    <ul className="list-disc list-inside text-sm mt-2">
+                        <li>Last login: {new Date().toLocaleString()}</li>
+                        <li>Total designs: {designSaved ? 1 : 0}</li>
+                        <li>Total campaigns: {campaigns.length}</li>
+                    </ul>
+                </div>
+            </div>
+        );
+    } else if (role === 'admin') {
+        const clientRoles = ['client', 'client2'];
+        const allCampaigns = clientRoles.flatMap(r => loadFromLocal(r, 'campaigns', []));
+        const totalPro = clientRoles.filter(r => loadFromLocal(r, 'pro_status', false)).length;
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-users"></i><p className="text-2xl font-bold">{clientRoles.length}</p><p>Active Clients</p></div>
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-chart-line"></i><p className="text-2xl font-bold">{allCampaigns.length}</p><p>Total Campaigns</p></div>
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-crown"></i><p className="text-2xl font-bold">{totalPro}</p><p>Pro Clients</p></div>
+                </div>
+                <div className="glass-card p-4 rounded-xl">
+                    <h4 className="font-bold">Pending Verifications</h4>
+                    <p className="text-sm">Use the Payments tab to verify client requests.</p>
+                </div>
+            </div>
+        );
+    } else {
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold">Founder / Owner Dashboard</h2>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-chart-line"></i><p className="text-2xl font-bold">3,000</p><p>Target Audience</p></div>
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-clock"></i><p className="text-2xl font-bold">3d</p><p>Campaign Duration</p></div>
+                    <div className="glass-card p-4 rounded-xl"><i className="fas fa-chart-simple"></i><p className="text-2xl font-bold">Honest</p><p>Marketing Policy</p></div>
+                </div>
+                <PlatformMarketingEngine />
+                <div className="glass-card p-4 rounded-xl">
+                    <h4 className="font-bold">System Logs (Simulated)</h4>
+                    <pre className="text-xs bg-black/50 p-2 rounded mt-2 overflow-auto">[2025-03-22] Owner dashboard accessed\n[2025-03-22] Platform marketing engine ready</pre>
+                </div>
+            </div>
+        );
+    }
+};
+
+export default Dashboard;
