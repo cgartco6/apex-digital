@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Apex Digital | Role Dashboards + Platform Marketing Engine</title>
+    <!-- Tailwind + Font Awesome + Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Core Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- React & ReactDOM & Babel -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0b0f1c; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e2538; }
+        ::-webkit-scrollbar-thumb { background: #f97316; border-radius: 10px; }
+        .glass-card { background: rgba(18, 24, 38, 0.85); backdrop-filter: blur(2px); border: 1px solid rgba(249, 115, 22, 0.25); }
+        .btn-primary { background: linear-gradient(95deg, #f97316, #dc2626); transition: transform 0.1s ease; }
+        .btn-primary:active { transform: scale(0.97); }
+        .tab-active { border-bottom: 3px solid #f97316; color: white; background: rgba(249,115,22,0.15); }
+        .pro-badge { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 0 8px gold; }
+        .landing-page-preview { background: white; color: #111; border-radius: 1rem; overflow: hidden; }
+        .layer-item:hover { background: rgba(249,115,22,0.2); }
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="text-gray-200">
+    <div id="root"></div>
+    <script type="text/babel">
+        // --------------------- UTILITIES ---------------------
+        const getStorageKey = (role, key) => `${role}_${key}`;
+        const saveToLocal = (role, key, data) => localStorage.setItem(getStorageKey(role, key), JSON.stringify(data));
+        const loadFromLocal = (role, key, defaultValue) => {
+            const raw = localStorage.getItem(getStorageKey(role, key));
+            return raw ? JSON.parse(raw) : defaultValue;
+        };
+
+        // --------------------- CONSTANTS ---------------------
+        const BANK_DETAILS = {
+            bank: "FNB (First National Bank)",
+            accountName: "Apex Digital (Pty) Ltd",
+            accountNumber: "62849612345",
+            branchCode: "250655",
+            referencePrefix: "APX"
+        };
+        const DEFAULT_AD = {
+            headline: "Create Scroll-Stopping Social Ads in Minutes",
+            copy: "Apex Social Media Ad Creator helps you design high‑conversion ads with AI‑assisted copy and instant previews. No design skills needed.",
+            image: "https://placehold.co/600x400/1e293b/f97316?text=Apex+Ad+Creator",
+            cta: "Try for Free"
+        };
+
+        // --------------------- COMPONENTS ---------------------
+        const DesignStudio = ({ role }) => {
+            const canvasRef = React.useRef(null);
+            const fabricCanvas = React.useRef(null);
+            const [history, setHistory] = React.useState([]);
+            const [historyIndex, setHistoryIndex] = React.useState(-1);
+            const [layers, setLayers] = React.useState([]);
+            const [selectedId, setSelectedId] = React.useState(null);
+
+            const saveState = () => {
+                if (!fabricCanvas.current) return;
+                const json = JSON.stringify(fabricCanvas.current.toJSON());
+                const newHistory = history.slice(0, historyIndex + 1);
+                newHistory.push(json);
+                setHistory(newHistory);
+                setHistoryIndex(newHistory.length - 1);
+                updateLayersList();
+            };
+
+            const undo = () => {
+                if (historyIndex > 0) {
+                    const prev = history[historyIndex - 1];
+                    fabricCanvas.current.loadFromJSON(JSON.parse(prev), () => {
+                        fabricCanvas.current.renderAll();
+                        setHistoryIndex(historyIndex - 1);
+                        updateLayersList();
+                    });
+                }
+            };
+            const redo = () => {
+                if (historyIndex < history.length - 1) {
+                    const next = history[historyIndex + 1];
+                    fabricCanvas.current.loadFromJSON(JSON.parse(next), () => {
+                        fabricCanvas.current.renderAll();
+                        setHistoryIndex(historyIndex + 1);
+                        updateLayersList();
+                    });
+                }
+            };
+
+            const updateLayersList = () => {
+                if (!fabricCanvas.current) return;
+                const objects = fabricCanvas.current.getObjects();
+                setLayers(objects.map((obj, idx) => ({ id: idx, type: obj.type, visible: obj.visible, text: obj.text || '' })));
+            };
+
+            React.useEffect(() => {
+                if (!canvasRef.current) return;
+                const canvas = new fabric.Canvas(canvasRef.current, {
+                    width: 580,
+                    height: 360,
+                    backgroundColor: '#1f2937',
+                    preserveObjectStacking: true,
+                });
+                fabricCanvas.current = canvas;
+                const saved = loadFromLocal(role, 'design_state', null);
+                if (saved) {
+                    canvas.loadFromJSON(saved, () => canvas.renderAll());
+                } else {
+                    const defaultText = new fabric.IText('APEX\nDESIGN', { left: 100, top: 120, fontSize: 36, fill: '#f97316', fontFamily: 'Inter', fontWeight: 'bold' });
+                    canvas.add(defaultText);
+                    canvas.renderAll();
+                }
+                canvas.on('object:added', saveState);
+                canvas.on('object:modified', saveState);
+                canvas.on('object:removed', saveState);
+                canvas.on('selection:created', () => updateLayersList());
+                canvas.on('selection:cleared', () => setSelectedId(null));
+                canvas.on('selection:updated', () => updateLayersList());
+                saveState();
+                updateLayersList();
+                return () => canvas.dispose();
+            }, [role]);
+
+            const addText = () => {
+                const text = new fabric.IText('Edit me', { left: 50, top: 50, fontSize: 24, fill: '#ffffff', fontFamily: 'Inter' });
+                fabricCanvas.current.add(text);
+                fabricCanvas.current.setActiveObject(text);
+                fabricCanvas.current.renderAll();
+            };
+            const addRectangle = () => {
+                const rect = new fabric.Rect({ width: 80, height: 80, fill: '#f97316', left: 200, top: 200, stroke: 'white', strokeWidth: 2 });
+                fabricCanvas.current.add(rect);
+                fabricCanvas.current.renderAll();
+            };
+            const uploadImage = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    fabric.Image.fromURL(event.target.result, (img) => {
+                        img.scaleToWidth(150);
+                        fabricCanvas.current.add(img);
+                        fabricCanvas.current.renderAll();
+                    });
+                };
+                reader.readAsDataURL(file);
+            };
+            const styleSelected = (prop, value) => {
+                const active = fabricCanvas.current.getActiveObject();
+                if (active) {
+                    active.set(prop, value);
+                    fabricCanvas.current.renderAll();
+                    saveState();
+                }
+            };
+            const toggleLayerVisibility = (idx) => {
+                const obj = fabricCanvas.current.getObjects()[idx];
+                if (obj) {
+                    obj.visible = !obj.visible;
+                    fabricCanvas.current.renderAll();
+                    updateLayersList();
+                    saveState();
+                }
+            };
+            const selectLayer = (idx) => {
+                const obj = fabricCanvas.current.getObjects()[idx];
+                if (obj) {
+                    fabricCanvas.current.setActiveObject(obj);
+                    fabricCanvas.current.renderAll();
+                    setSelectedId(idx);
+                }
+            };
+            const exportPNG = () => {
+                const dataURL = fabricCanvas.current.toDataURL({ format: 'png' });
+                const link = document.createElement('a');
+                link.download = 'apex-design.png';
+                link.href = dataURL;
+                link.click();
+            };
+            const exportSVG = () => {
+                const svg = fabricCanvas.current.toSVG();
+                const blob = new Blob([svg], { type: 'image/svg+xml' });
+                saveAs(blob, 'apex-design.svg');
+            };
+            const saveDesignLocally = () => {
+                const json = JSON.stringify(fabricCanvas.current.toJSON());
+                saveToLocal(role, 'design_state', json);
+                alert('Design saved to browser!');
+            };
+
+            return (
+                <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 items-center">
+                        <button onClick={addText} className="bg-indigo-600 px-3 py-1.5 rounded-lg text-sm"><i className="fas fa-font"></i> Text</button>
+                        <button onClick={addRectangle} className="bg-emerald-600 px-3 py-1.5 rounded-lg text-sm"><i className="fas fa-square"></i> Shape</button>
+                        <label className="bg-purple-600 px-3 py-1.5 rounded-lg text-sm cursor-pointer"><i className="fas fa-image"></i> Image<input type="file" accept="image/*" className="hidden" onChange={uploadImage} /></label>
+                        <div className="flex gap-1 border-l border-gray-600 pl-2">
+                            <button onClick={undo} className="bg-gray-700 px-2 py-1 rounded"><i className="fas fa-undo"></i></button>
+                            <button onClick={redo} className="bg-gray-700 px-2 py-1 rounded"><i className="fas fa-redo"></i></button>
+                        </div>
+                        <div className="flex gap-1">
+                            <button onClick={() => styleSelected('fontWeight', 'bold')} className="bg-gray-700 px-2 py-1 rounded"><b>B</b></button>
+                            <button onClick={() => styleSelected('fontStyle', 'italic')} className="bg-gray-700 px-2 py-1 rounded"><i>I</i></button>
+                            <input type="color" onChange={(e) => styleSelected('fill', e.target.value)} className="w-8 h-8 rounded" />
+                        </div>
+                        <button onClick={exportPNG} className="bg-blue-600 px-3 py-1.5 rounded-lg text-sm"><i className="fas fa-download"></i> PNG</button>
+                        <button onClick={exportSVG} className="bg-blue-600 px-3 py-1.5 rounded-lg text-sm"><i className="fas fa-download"></i> SVG</button>
+                        <button onClick={saveDesignLocally} className="bg-green-700 px-3 py-1.5 rounded-lg text-sm"><i className="fas fa-save"></i> Save</button>
+                    </div>
+                    <div className="flex justify-center">
+                        <canvas ref={canvasRef} className="border-2 border-gray-600 rounded-xl shadow-2xl" style={{ maxWidth: '100%', height: 'auto' }}></canvas>
+                    </div>
+                    <div className="glass-card p-3 rounded-xl">
+                        <h4 className="text-sm font-bold">Layers</h4>
+                        <div className="max-h-32 overflow-y-auto mt-1">
+                            {layers.map((layer, idx) => (
+                                <div key={idx} className={`layer-item flex justify-between items-center p-1 text-xs cursor-pointer ${selectedId === idx ? 'bg-orange-800' : ''}`} onClick={() => selectLayer(idx)}>
+                                    <span><i className={`fas fa-${layer.type === 'text' ? 'font' : 'square'}`}></i> {layer.text || layer.type}</span>
+                                    <i className={`fas fa-eye${layer.visible ? '' : '-slash'} cursor-pointer`} onClick={(e) => { e.stopPropagation(); toggleLayerVisibility(idx); }}></i>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const BrandingStudio = ({ role }) => {
+            const [primary, setPrimary] = React.useState(loadFromLocal(role, 'brand_primary', '#f97316'));
+            const [secondary, setSecondary] = React.useState(loadFromLocal(role, 'brand_secondary', '#3b82f6'));
+            const [font, setFont] = React.useState(loadFromLocal(role, 'brand_font', 'Inter'));
+            const [logo, setLogo] = React.useState(loadFromLocal(role, 'brand_logo', 'https://placehold.co/200x80/1e293b/f97316?text=APEX+LOGO'));
+            const [tempLogo, setTempLogo] = React.useState('');
+
+            React.useEffect(() => {
+                saveToLocal(role, 'brand_primary', primary);
+                saveToLocal(role, 'brand_secondary', secondary);
+                saveToLocal(role, 'brand_font', font);
+                saveToLocal(role, 'brand_logo', logo);
+            }, [primary, secondary, font, logo, role]);
+
+            const exportBrandKitZip = async () => {
+                const zip = new JSZip();
+                const cssContent = `:root { --primary: ${primary}; --secondary: ${secondary}; --font: ${font}; } .btn-primary { background: var(--primary); }`;
+                zip.file("brand.css", cssContent);
+                if (logo && logo.startsWith('http')) {
+                    try {
+                        const response = await fetch(logo);
+                        const blob = await response.blob();
+                        zip.file("logo.png", blob);
+                    } catch(e) { console.warn("Could not fetch logo"); }
+                }
+                const content = await zip.generateAsync({ type: "blob" });
+                saveAs(content, "apex-brand-kit.zip");
+            };
+
+            return (
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                        <div><label>Primary Color</label><input type="color" value={primary} onChange={e => setPrimary(e.target.value)} className="w-full h-10 rounded" /></div>
+                        <div><label>Secondary Color</label><input type="color" value={secondary} onChange={e => setSecondary(e.target.value)} className="w-full h-10 rounded" /></div>
+                        <div><label>Font</label><select value={font} onChange={e => setFont(e.target.value)} className="bg-gray-800 p-2 rounded w-full"><option>Inter</option><option>Poppins</option><option>Montserrat</option></select></div>
+                        <div><label>Logo URL</label><div className="flex gap-2"><input type="text" value={tempLogo} onChange={e => setTempLogo(e.target.value)} className="bg-gray-800 flex-1 p-2 rounded" placeholder="Image URL" /><button onClick={() => { if(tempLogo) setLogo(tempLogo); }} className="bg-orange-600 px-3 rounded">Set</button></div></div>
+                        <button onClick={exportBrandKitZip} className="bg-blue-600 w-full py-2 rounded-lg mt-2"><i className="fas fa-file-zipper"></i> Download Brand Kit (ZIP)</button>
+                    </div>
+                    <div className="glass-card p-4 rounded-2xl" style={{ backgroundColor: secondary+'20', borderTopColor: primary, borderTopWidth: 4, fontFamily: font }}>
+                        <h3 style={{color: primary}}>APEX Preview</h3>
+                        <div className="flex gap-2 mt-2"><span className="px-3 py-1 rounded text-white" style={{background:primary}}>Primary</span><span className="px-3 py-1 rounded text-white" style={{background:secondary}}>Secondary</span></div>
+                        <img src={logo} alt="logo" className="max-h-16 mt-2" />
+                    </div>
+                </div>
+            );
+        };
+
+        const MarketingStudio = ({ role, aggressiveBoostFlag, onBoostAcknowledge }) => {
+            const [campaigns, setCampaigns] = React.useState(loadFromLocal(role, 'campaigns', [
+                { id: 1, name: "Summer Blast", budget: 2500, impressions: 45800, clicks: 3100, conversions: 342, status: "active" },
+                { id: 2, name: "Flash Sale X", budget: 1200, impressions: 23400, clicks: 2100, conversions: 198, status: "active" },
+            ]));
+            const [newCampaign, setNewCampaign] = React.useState({ name: "", budget: "" });
+
+            React.useEffect(() => {
+                saveToLocal(role, 'campaigns', campaigns);
+            }, [campaigns, role]);
+
+            React.useEffect(() => {
+                if (aggressiveBoostFlag) {
+                    setCampaigns(prev => prev.map(c => ({
+                        ...c,
+                        impressions: Math.floor(c.impressions * 1.4),
+                        clicks: Math.floor(c.clicks * 1.5),
+                        conversions: Math.floor(c.conversions * 1.35),
+                    })));
+                    if (onBoostAcknowledge) onBoostAcknowledge();
+                }
+            }, [aggressiveBoostFlag]);
+
+            const addCampaign = () => {
+                if (!newCampaign.name || !newCampaign.budget) return;
+                const newId = campaigns.length + 1;
+                setCampaigns([...campaigns, {
+                    id: newId,
+                    name: newCampaign.name,
+                    budget: parseInt(newCampaign.budget),
+                    impressions: Math.floor(Math.random() * 20000) + 5000,
+                    clicks: Math.floor(Math.random() * 2000),
+                    conversions: Math.floor(Math.random() * 200),
+                    status: "active"
+                }]);
+                setNewCampaign({ name: "", budget: "" });
+            };
+            const exportCSV = () => {
+                const headers = ["ID","Name","Budget","Impressions","Clicks","Conversions","Status"];
+                const rows = campaigns.map(c => [c.id, c.name, c.budget, c.impressions, c.clicks, c.conversions, c.status]);
+                const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                saveAs(blob, "apex-campaigns.csv");
+            };
+            const exportPDF = async () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.text("Apex Digital - Campaign Report", 10, 10);
+                let y = 20;
+                campaigns.forEach(c => {
+                    doc.text(`${c.name} | Budget: $${c.budget} | Impr: ${c.impressions} | Clicks: ${c.clicks} | Conv: ${c.conversions}`, 10, y);
+                    y += 8;
+                    if (y > 280) { doc.addPage(); y = 20; }
+                });
+                doc.save("camp
