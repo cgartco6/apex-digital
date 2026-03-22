@@ -1,8 +1,8 @@
 export const BANK_DETAILS = {
-    bank: "Standard Bank",
+    bank: "FNB (First National Bank)",
     accountName: "Apex Digital (Pty) Ltd",
-    accountNumber: "123456789",
-    branchCode: "051001",
+    accountNumber: "62849612345",          // example FNB account number
+    branchCode: "250655",                  // typical FNB branch code
     referencePrefix: "APX"
 };
 
