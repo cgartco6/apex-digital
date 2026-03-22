@@ -1,0 +1,110 @@
+                link.click();
+            };
+            const saveDesign = () => {
+                const json = JSON.stringify(fabricCanvas.current.toJSON());
+                saveToLocal(role, 'design_state', json);
+                alert('Design saved to browser!');
+            };
+
+            return h('div', { className: 'space-y-4' },
+                h('div', { className: 'flex flex-wrap gap-2' },
+                    h('button', { onClick: addText, className: 'btn-primary px-4 py-2 rounded-lg text-sm font-medium text-white' }, h('i', { className: 'fas fa-font mr-2' }), 'Text'),
+                    h('button', { onClick: addRect, className: 'btn-primary px-4 py-2 rounded-lg text-sm font-medium text-white' }, h('i', { className: 'fas fa-square mr-2' }), 'Shape'),
+                    h('label', { className: 'btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer' }, h('i', { className: 'fas fa-image mr-2' }), 'Image',
+                        h('input', { type: 'file', accept: 'image/*', className: 'hidden', onChange: uploadImage })),
+                    h('div', { className: 'flex gap-1 bg-gray-700/30 rounded-lg p-1' },
+                        h('button', { onClick: () => styleSelected('fontWeight', 'bold'), className: 'bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-white transition' }, h('b', null, 'B')),
+                        h('button', { onClick: () => styleSelected('fontStyle', 'italic'), className: 'bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-white transition' }, h('i', null, 'I')),
+                        h('input', { type: 'color', onChange: (e) => styleSelected('fill', e.target.value), className: 'w-8 h-8 rounded cursor-pointer' })),
+                    h('button', { onClick: exportPNG, className: 'bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-medium text-white transition' }, h('i', { className: 'fas fa-download mr-2' }), 'PNG'),
+                    h('button', { onClick: saveDesign, className: 'bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium text-white transition' }, h('i', { className: 'fas fa-save mr-2' }), 'Save')
+                ),
+                h('div', { className: 'flex justify-center canvas-wrapper' }, h('canvas', { ref: canvasRef, className: 'rounded-xl shadow-2xl', style: { maxWidth: '100%', height: 'auto' } })),
+                h('div', { className: 'glass-card p-3 rounded-xl' },
+                    h('h4', { className: 'text-sm font-bold mb-2 flex items-center gap-2 text-blue-300' }, h('i', { className: 'fas fa-layer-group' }), 'Layers'),
+                    h('div', { className: 'max-h-32 overflow-y-auto space-y-1' }, layers.map((l, idx) =>
+                        h('div', { key: idx, className: `layer-item flex justify-between items-center p-2 text-xs rounded cursor-pointer ${selectedId === idx ? 'bg-blue-600/30' : 'hover:bg-blue-500/20'}`,
+                            onClick: () => { fabricCanvas.current.setActiveObject(fabricCanvas.current.getObjects()[idx]); fabricCanvas.current.renderAll(); setSelectedId(idx); } },
+                            h('span', null, h('i', { className: `fas fa-${l.type === 'text' ? 'font' : 'square'} mr-2 text-blue-400` }), l.text || l.type),
+                            h('i', { className: 'fas fa-eye text-gray-400' })
+                        )
+                    ))
+                )
+            );
+        };
+
+        // ---------- BRANDING STUDIO ----------
+        const BrandingStudio = ({ role }) => {
+            const [primary, setPrimary] = useState(loadFromLocal(role, 'brand_primary', '#1e3a8a'));
+            const [secondary, setSecondary] = useState(loadFromLocal(role, 'brand_secondary', '#3b82f6'));
+            const [font, setFont] = useState(loadFromLocal(role, 'brand_font', 'Inter'));
+            const [logo, setLogo] = useState(loadFromLocal(role, 'brand_logo', 'https://placehold.co/200x80/1e3a8a/ffffff?text=APEX'));
+            const [tempLogo, setTempLogo] = useState('');
+
+            useEffect(() => {
+                saveToLocal(role, 'brand_primary', primary);
+                saveToLocal(role, 'brand_secondary', secondary);
+                saveToLocal(role, 'brand_font', font);
+                saveToLocal(role, 'brand_logo', logo);
+            }, [primary, secondary, font, logo, role]);
+
+            const exportZip = async () => {
+                const zip = new JSZip();
+                zip.file("brand.css", `:root{--primary:${primary};--secondary:${secondary};--font:${font}}`);
+                if (logo && logo.startsWith('http')) {
+                    try {
+                        const res = await fetch(logo);
+                        const blob = await res.blob();
+                        zip.file("logo.png", blob);
+                    } catch(e) {}
+                }
+                const content = await zip.generateAsync({ type: "blob" });
+                saveAs(content, "apex-brand-kit.zip");
+            };
+
+            return h('div', { className: 'grid md:grid-cols-2 gap-6' },
+                h('div', { className: 'space-y-4' },
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Primary Color'),
+                        h('input', { type: 'color', value: primary, onChange: e => setPrimary(e.target.value), className: 'w-full h-12 rounded-lg cursor-pointer bg-gray-800 border border-gray-600' })),
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Secondary Color'),
+                        h('input', { type: 'color', value: secondary, onChange: e => setSecondary(e.target.value), className: 'w-full h-12 rounded-lg cursor-pointer bg-gray-800 border border-gray-600' })),
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Brand Font'),
+                        h('select', { value: font, onChange: e => setFont(e.target.value), className: 'bg-gray-800 p-3 rounded-lg w-full border border-gray-600' },
+                            h('option', { value: 'Inter' }, 'Inter'), h('option', { value: 'Poppins' }, 'Poppins'), h('option', { value: 'Montserrat' }, 'Montserrat'))),
+                    h('div', null, h('label', { className: 'block text-sm font-medium mb-2 text-blue-300' }, 'Logo URL'),
+                        h('div', { className: 'flex gap-2' }, h('input', { value: tempLogo, onChange: e => setTempLogo(e.target.value), className: 'bg-gray-800 flex-1 p-3 rounded-lg border border-gray-600', placeholder: 'https://...' }),
+                            h('button', { onClick: () => tempLogo && setLogo(tempLogo), className: 'btn-primary px-6 rounded-lg text-white font-medium' }, 'Set'))),
+                    h('button', { onClick: exportZip, className: 'btn-primary w-full py-3 rounded-lg font-medium text-white mt-4' }, h('i', { className: 'fas fa-file-zipper mr-2' }), 'Download Brand Kit (ZIP)')
+                ),
+                h('div', { className: 'glass-card p-6 rounded-2xl', style: { backgroundColor: secondary+'20', borderTop: `4px solid ${primary}`, fontFamily: font } },
+                    h('h3', { style: { color: primary }, className: 'text-2xl font-bold' }, 'APEX Brand Preview'),
+                    h('div', { className: 'flex gap-3 mt-4' },
+                        h('span', { className: 'px-4 py-2 rounded-full text-white text-sm font-medium', style: { background: primary } }, 'Primary'),
+                        h('span', { className: 'px-4 py-2 rounded-full text-white text-sm font-medium', style: { background: secondary } }, 'Secondary')
+                    ),
+                    h('img', { src: logo, className: 'max-h-20 mt-4 object-contain', alt: 'logo' }),
+                    h('p', { className: 'text-sm text-gray-300 mt-4' }, 'Your brand identity is consistent across all marketing materials.')
+                )
+            );
+        };
+
+        // ---------- MARKETING STUDIO ----------
+        const MarketingStudio = ({ role, aggressiveBoostFlag, onBoostAcknowledge }) => {
+            const [campaigns, setCampaigns] = useState(loadFromLocal(role, 'campaigns', [
+                { id:1, name:"Summer Blast", budget:2500, impressions:45800, clicks:3100, conversions:342 },
+                { id:2, name:"Flash Sale", budget:1200, impressions:23400, clicks:2100, conversions:198 }
+            ]));
+            const [newCampaign, setNewCampaign] = useState({ name: "", budget: "" });
+
+            useEffect(() => {
+                saveToLocal(role, 'campaigns', campaigns);
+            }, [campaigns, role]);
+
+            useEffect(() => {
+                if (aggressiveBoostFlag) {
+                    setCampaigns(prev => prev.map(c => ({
+                        ...c,
+                        impressions: Math.floor(c.impressions * 1.4),
+                        clicks: Math.floor(c.clicks 
+                if (!newCampaign.name || !newCampaign.budget) return;
+                setCampaigns([...c
