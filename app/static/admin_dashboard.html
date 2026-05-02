@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Admin Dashboard</h2>
+    <div id="stats" class="row"></div>
+    <h3>Users</h3>
+    <div id="usersList"></div>
+</div>
+<script>
+const token = localStorage.getItem('access_token');
+fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } })
+  .then(r => r.json())
+  .then(stats => {
+      document.getElementById('stats').innerHTML = `
+          <div class="col-md-4"><div class="card">Total Users: ${stats.total_users}</div></div>
+          <div class="col-md-4"><div class="card">Revenue: R${stats.total_revenue}</div></div>
+          <div class="col-md-4"><div class="card">Pending Orders: ${stats.pending_orders}</div></div>
+      `;
+  });
+fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } })
+  .then(r => r.json())
+  .then(users => {
+      let html = '<ul class="list-group">';
+      users.forEach(u => { html += `<li class="list-group-item">${u.email} (${u.role}) – ${u.business_name || 'N/A'}</li>`; });
+      html += '</ul>';
+      document.getElementById('usersList').innerHTML = html;
+  });
+</script>
+</body>
+</html>
