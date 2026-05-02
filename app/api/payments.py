@@ -1,0 +1,125 @@
+from flask import Blueprint, request, jsonify, current_app
+from app import db
+from app.models import PaymentTransaction, Order
+import stripe
+import payfast
+import os
+from werkzeug.utils import secure_filename
+import uuid
+import paypalrestsdk
+
+bp = Blueprint('payments', __name__, url_prefix='/api/pay')
+stripe.api_key = current_app.config['STRIPE_API_KEY']
+
+# Payfast
+pf = payfast.PayFast(
+    merchant_id=current_app.config['PAYFAST_MERCHANT_ID'],
+    secret_key=current_app.config['PAYFAST_SECRET_KEY'],
+    sandbox=True
+)
+
+# FNB static details
+FNB_BANK_DETAILS = {
+    "bank_name": "First National Bank (FNB)",
+    "account_holder": "Apex Digital (Pty) Ltd",
+    "account_number": "62845900812",
+    "branch_code": "250655",
+    "instructions": "Use your email as reference. Upload proof of payment below."
+}
+
+@bp.route('/stripe/create-intent', methods=['POST'])
+def stripe_intent():
+    data = request.json
+    intent = stripe.PaymentIntent.create(
+        amount=int(data['amount'] * 100),
+        currency=data.get('currency', 'zar'),
+        metadata={'user_id': data.get('user_id')}
+    )
+    return jsonify({'client_secret': intent.client_secret})
+
+@bp.route('/stripe/pay-order', methods=['POST'])
+@jwt_required()
+def pay_order_stripe():
+    from flask_jwt_extended import get_jwt_identity
+    data = request.json
+    order_id = data['order_id']
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+    intent = stripe.PaymentIntent.create(
+        amount=int(order.total * 100),
+        currency='zar',
+        metadata={'order_id': order_id, 'user_id': get_jwt_identity()}
+    )
+    return jsonify({'client_secret': intent.client_secret})
+
+@bp.route('/payfast/redirect', methods=['POST'])
+def payfast_redirect():
+    amount = request.json['amount']
+    user_id = request.json['user_id']
+    url = pf.generate_payment_url(amount, f"invoice_{user_id}")
+    return jsonify({'redirect_url': url})
+
+@bp.route('/payfast/notify', methods=['POST'])
+def payfast_notify():
+    if pf.validate_notification(request.form):
+        tx = PaymentTransaction(
+            user_id=request.form['custom_str1'],
+            amount_zar=float(request.form['amount_gross']),
+            gateway='payfast',
+            status='completed'
+        )
+        db.session.add(tx)
+        db.session.commit()
+    return 'OK'
+
+@bp.route('/direct-eft/details', methods=['GET'])
+def get_eft_details():
+    user_id = request.args.get('user_id')
+    amount = float(request.args.get('amount', 0))
+    reference = f"APEX-{user_id}-{uuid.uuid4().hex[:8]}"
+    return jsonify({
+        **FNB_BANK_DETAILS,
+        "reference": reference,
+        "amount_due": amount
+    })
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+@bp.route('/direct-eft/upload-proof', methods=['POST'])
+def upload_proof():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+        os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+        tx = PaymentTransaction(
+            user_id=request.form.get('user_id'),
+            amount_zar=float(request.form.get('amount', 0)),
+            gateway='direct_eft',
+            status='pending_verification'
+        )
+        db.session.add(tx)
+        db.session.commit()
+        return jsonify({'message': 'Proof uploaded. We will verify within 24 hours.', 'transaction_id': tx.id})
+    return jsonify({'error': 'File type not allowed'}), 400
+
+@bp.route('/paypal/create-order', methods=['POST'])
+def paypal_order():
+    paypalrestsdk.configure({
+        "mode": "sandbox",
+        "client_id": current_app.config['PAYPAL_CLIENT_ID'],
+        "client_secret": current_app.config['PAYPAL_SECRET']
+    })
+    order = paypalrestsdk.Order({
+        "intent": "CAPTURE",
+        "purchase_units": [{"amount": {"currency_code": "ZAR", "value": request.json['amount']}}]
+    })
+    if order.create():
+        return jsonify({'order_id': order.id})
+    return jsonify({'error': 'PayPal error'}), 400
